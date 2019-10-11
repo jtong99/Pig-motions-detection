@@ -4,7 +4,7 @@ import threading
 import sys
 import Object_detection_image
 import xml_to_csv2 as csv
-import generate_tfrecord2 as record
+import generate_tfrecord2
 import cpfile
 from PIL import Image, ImageTk
 from tkinter import *
@@ -25,34 +25,7 @@ sys.path.append("..")
 # Import utilites
 from utils import label_map_util
 from utils import visualization_utils as vis_util
-#MODEL_NAME = 'C:\\Users\\Shan Tong\\Desktop\\NC-TONG HOP\\train 7_latest\\inference_graph'
-MODEL_NAME = ''
-global window
-window = Tk()
-window.title("Pigs Motions Detection & Training app")
-window.geometry('600x420')
-window.resizable(width=False, height=False)
 
-tab_control = Notebook(window)
-tab1 = Frame(tab_control)
-tab2 = Frame(tab_control)
-tab_control.add(tab1, text='Detect')
-tab_control.add(tab2, text='Train')
-lbl1 = Label(tab1, text=" ____ W E L C O M E ____ ")
-lbl1.place(x=300, y=25, anchor="center")
-lbl2 = Label(tab2, text=" ____ W E L C O M E ____ ")
-lbl2.place(x=300, y=25, anchor="center")
-tab_control.pack(expand=1, fill='both')
-stop = False
-combo = Combobox(tab1)
-combo.configure(width = 50)
-lab1 = Label(tab1, text="File Path: ")
-lab1.place(x=50, y=50, anchor="w")
-
-combo2 = Combobox(tab2)
-combo2.configure(width = 50)
-lab2 = Label(tab2, text="Working folder: ")
-lab2.place(x=40, y=50, anchor="w")
 
 
 def display(MODEL_NAME, VIDEO_NAME):
@@ -320,6 +293,85 @@ def change_step():
             messagebox.showinfo('success','Successfully added steps and Click OK to start training.')
             cmd = subprocess.Popen('cmd.exe /K cd /d '+file2+'&& py train.py --logtostderr --train_dir='+file2+'/training/ --pipeline_config_path='+file2+'/training/faster_rcnn_inception_v2_pets.config')
 #E:\\nckh\\models-master\\research\\object_detection
+obj_names = []   
+def start_change():
+    z = 1
+    for i in ent:
+        with open(file2+'/training/'+obj_name_fill.get()+'.pbtxt','a') as file:
+            file.write('item{\n'+'  id: '+str(z)+'\n'+'  name: "'+i.get()+'"\n'+'}\n')
+        z += 1
+    global obj_file
+    global num_object
+    obj_file = obj_name_fill.get()
+    file_label = file2 + 'training/'+obj_file+'.pbtxt'
+    num_object = objects
+    for e in ent:
+        obj_names.append(e.get())
+    fname =file2+'training/faster_rcnn_inception_v2_pets.config'
+    num_classes = '    num_classes: '+str(objects)+'\n'
+    label_path = '  label_map_path: '+'"'+file_label+'"\n'
+    train = '    input_path: "'+file2+'data/train.record'+'"'
+    test = '  input_path: "'+file2+'data/test.record'
+    with open(fname,'r') as file:
+        data = file.readlines()
+    f = open(fname,'r+')
+    fread = f.readlines()
+    x = 'num_steps:'
+    a =[]
+    i = 0
+    for line in fread:
+        i+=1
+        data[123] = train
+        data[135] = test
+        if 'num_classes:' in line:
+            data[i-1]= num_classes
+        if 'label_map_path:' in line:
+            data[i-1] = label_path
+        with open(fname,'w') as file1:
+            file1.writelines(data)
+    
+def change_class():
+    global wi
+    wi = Toplevel()
+    wi.geometry('250x500')
+    wi.title('training')
+    lb = Label(wi, text="Enter object: ")
+    lb.place(x=10,y=10)
+    global objects
+    objects = Entry(wi)
+    objects.place(x=90,y=10)
+    btn= ttk.Button(wi,text='OK',command=display)
+    btn.place(x=100,y=50)
+    starting = ttk.Button(wi,text='start change',command=start_change)
+    starting.place(x=100,y=300)
+def display():
+    global objects
+    objects = objects.get()
+    objects = int(objects)
+    z = 0
+    global ent
+    ent = []
+    lab = []
+    le = 120
+    le1 = 120
+    obj_name = Label(wi,text='File name: ')
+    obj_name.place(x=10,y=80)
+    global obj_name_fill
+    global o_name
+    obj_name_fill = Entry(wi)
+    obj_name_fill.place(x=90,y=80)
+    for i in range(objects):
+        name = 'object ' + str(z+1) +':'
+        lab.append(Label(wi,text=name))
+        ent.append(Entry(wi))
+        z += 1
+    for k in lab:
+        k.place(x=10,y=le1)
+        le1 = le1 + 30
+    for i in ent:
+        i.place(x = 90, y = le)
+        le = le + 30
+        
 def create_csv():
     #global image
     if combo2.get() == "":
@@ -337,11 +389,10 @@ def create_record():
     if combo2.get() == "":
         messagebox.showinfo('ERROR! CANNOT CREATE RECORD FILE','Please fill the path of working folder!!!')
     else:
-        record.export_train_record(file2)
-        record.export_test_record(file2)
+        generate_tfrecord2.export_train_record(file2)
+        generate_tfrecord2.export_test_record(file2)
         messagebox.showinfo('success','Successfully created records!')
-def do():
-    a = 1
+
 def divide_img():
     if combo2.get() == "":
         messagebox.showinfo('ERROR! CANNOT DIVIDE IMAGE','Please fill the path of working folder!!!')
@@ -385,39 +436,92 @@ def model():
     mod = filedialog.askdirectory()
     global MODEL_NAME
     MODEL_NAME = mod
-btn = Button(tab1,text='Browse', command=browse)
-btn.place(x=553, y=50, anchor="e")
-sdetect = Button(tab1,text='Start Detecting', command=detect)
-sdetect.place(x=553, y=370, anchor="e")
-cancel = Button(tab1,text='Cancel',command=close)
-cancel.place(x=320, y=370, anchor="e")
-combo.place(x=290, y=50, anchor="center")
-combo2.place(x=290, y=50, anchor="center")
-btn2 = Button(tab2,text='Browse', command=browse2)
-btn2.place(x=553, y=50, anchor="e")
+def class_text_to_int(row_label):
+    z = 1
+    for i in obj_names:
+        if row_label == i:
+            return z
+        z += 1
+    return 0
+    
 
-createCSV = Button(tab2, text='Create CSV',command= create_csv)
-createCSV.place(x=100,y=100)
+def test_obj():
+    global obj_names
+    for j in obj_names:
+        print(j)
+    print(class_text_to_int('sitting pig'))
+if __name__ == "__main__":
+    #MODEL_NAME = 'C:\\Users\\Shan Tong\\Desktop\\NC-TONG HOP\\train 7_latest\\inference_graph'
+    MODEL_NAME = ''
+    global window
+    window = Tk()
+    window.title("Pigs Motions Detection & Training app")
+    window.geometry('600x420')
+    window.resizable(width=False, height=False)
 
-trainRECORD = Button(tab2, text='Create records',command= create_record )
-trainRECORD.place(x=100,y=200)
+    tab_control = Notebook(window)
+    tab1 = Frame(tab_control)
+    tab2 = Frame(tab_control)
+    tab_control.add(tab1, text='Detect')
+    tab_control.add(tab2, text='Train')
+    lbl1 = Label(tab1, text=" ____ W E L C O M E ____ ")
+    lbl1.place(x=300, y=25, anchor="center")
+    lbl2 = Label(tab2, text=" ____ W E L C O M E ____ ")
+    lbl2.place(x=300, y=25, anchor="center")
+    tab_control.pack(expand=1, fill='both')
+    stop = False
+    combo = Combobox(tab1)
+    combo.configure(width = 50)
+    lab1 = Label(tab1, text="File Path: ")
+    lab1.place(x=50, y=50, anchor="w")
+
+    combo2 = Combobox(tab2)
+    combo2.configure(width = 50)
+    lab2 = Label(tab2, text="Working folder: ")
+    lab2.place(x=40, y=50, anchor="w")
 
 
-train = Button(tab2, text='Start Training',command= train)
-train.place(x=100,y=350)
 
-down = Button(tab2, text='Download',command= down)
-down.place(x=200,y=100)
+    
+    btn = Button(tab1,text='Browse', command=browse)
+    btn.place(x=553, y=50, anchor="e")
+    sdetect = Button(tab1,text='Start Detecting', command=detect)
+    sdetect.place(x=553, y=370, anchor="e")
+    cancel = Button(tab1,text='Cancel',command=close)
+    cancel.place(x=320, y=370, anchor="e")
+    combo.place(x=290, y=50, anchor="center")
+    combo2.place(x=290, y=50, anchor="center")
+    btn2 = Button(tab2,text='Browse', command=browse2)
+    btn2.place(x=553, y=50, anchor="e")
 
-down = Button(tab2, text='Create dir',command= create_dir)
-down.place(x=400,y=100)
+    createCSV = Button(tab2, text='Create CSV',command= create_csv)
+    createCSV.place(x=100,y=100)
 
-divide = Button(tab2, text='Divide img',command= divide_img)
-divide.place(x=300,y=100)
-
-choose_graph = Button(tab1, text='Choose model',command=model)
-choose_graph.place(x=350,y=359)
+    trainRECORD = Button(tab2, text='Create records',command= create_record )
+    trainRECORD.place(x=100,y=200)
 
 
-window.mainloop()
+    train = Button(tab2, text='Start Training',command= train)
+    train.place(x=100,y=350)
+
+    down = Button(tab2, text='Download',command= down)
+    down.place(x=200,y=100)
+
+    down = Button(tab2, text='Create dir',command= create_dir)
+    down.place(x=400,y=100)
+
+    divide = Button(tab2, text='Divide img',command= divide_img)
+    divide.place(x=300,y=100)
+
+    choose_graph = Button(tab1, text='Choose model',command=model)
+    choose_graph.place(x=350,y=359)
+
+    change_class = Button(tab2, text='Change class',command=change_class)
+    change_class.place(x=400,y=359)
+
+    teste = Button(tab2, text='test',command=test_obj)
+    teste.place(x=400,y=270)
+
+
+    window.mainloop()
 
