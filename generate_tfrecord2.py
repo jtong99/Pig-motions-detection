@@ -15,7 +15,6 @@ import os
 import io
 import pandas as pd
 import tensorflow as tf
-
 from PIL import Image
 from object_detection.utils import dataset_util
 from collections import namedtuple, OrderedDict
@@ -33,6 +32,7 @@ csv_input_test = 'data//test_labels.csv'
 image_dir_test = 'ha//test'
 output_path_test ='data//test.record'
 # TO-DO replace this with label map
+'''
 def class_text_to_int(row_label):
     if row_label == 'sitting pig':
         return 1
@@ -45,7 +45,7 @@ def class_text_to_int(row_label):
     elif row_label == 'multi pig':
         return 5
     else:
-        None
+        None'''
 
 
 def split(df, group):
@@ -55,12 +55,12 @@ def split(df, group):
 
 
 def create_tf_example(group, path):
+    from application1 import class_text_to_int
     with tf.gfile.GFile(os.path.join(path, '{}'.format(group.filename)), 'rb') as fid:
         encoded_jpg = fid.read()
     encoded_jpg_io = io.BytesIO(encoded_jpg)
     image = Image.open(encoded_jpg_io)
     width, height = image.size
-
     filename = group.filename.encode('utf8')
     image_format = b'jpg'
     xmins = []
@@ -69,7 +69,6 @@ def create_tf_example(group, path):
     ymaxs = []
     classes_text = []
     classes = []
-
     for index, row in group.object.iterrows():
         xmins.append(row['xmin'] / width)
         xmaxs.append(row['xmax'] / width)
