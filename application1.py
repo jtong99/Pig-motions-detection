@@ -291,7 +291,7 @@ def change_step():
             with open(fname,'w') as file1:
                 file1.writelines(data)
             messagebox.showinfo('success','Successfully added steps and Click OK to start training.')
-            cmd = subprocess.Popen('cmd.exe /K cd /d '+file2+'&& py train.py --logtostderr --train_dir='+file2+'/training/ --pipeline_config_path='+file2+'/training/faster_rcnn_inception_v2_pets.config')
+            cmd = subprocess.Popen('cmd.exe /K cd /d '+file2+'&& py train.py --logtostderr --train_dir='+file2+'/training/ --pipeline_config_path='+file2+'/training/faster_rcnn_inception_v2_pets.config && exit')
 #E:\\nckh\\models-master\\research\\object_detection
 obj_names = []   
 def start_change():
@@ -310,8 +310,8 @@ def start_change():
     fname =file2+'training/faster_rcnn_inception_v2_pets.config'
     num_classes = '    num_classes: '+str(objects)+'\n'
     label_path = '  label_map_path: '+'"'+file_label+'"\n'
-    train = '    input_path: "'+file2+'data/train.record'+'"'
-    test = '  input_path: "'+file2+'data/test.record'
+    train = '    input_path: "'+file2+'data/train.record'+'"\n'
+    test = '    input_path: "'+file2+'data/test.record"\n'
     with open(fname,'r') as file:
         data = file.readlines()
     f = open(fname,'r+')
@@ -319,10 +319,12 @@ def start_change():
     x = 'num_steps:'
     a =[]
     i = 0
+    data[122] = train
+    data[134] = test
+    with open(fname,'w') as file1:
+        file1.writelines(data)
     for line in fread:
         i+=1
-        data[123] = train
-        data[135] = test
         if 'num_classes:' in line:
             data[i-1]= num_classes
         if 'label_map_path:' in line:
