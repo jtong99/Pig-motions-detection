@@ -267,15 +267,16 @@ def ok():
         value = entry_train.get()
         print(value)
 def change_step():
-    n = entry_train.get()
+    global num_step
+    num_step = entry_train.get()
     if combo2.get() == "":
         error()
     else:
-        if n == "":
+        if num_step == "":
             messagebox.showinfo('error','Please add steps.')
         else:
             fname =file2+'/training/faster_rcnn_inception_v2_pets.config'
-            s = '  num_steps: '+str(n)+'\n'
+            s = '  num_steps: '+str(num_step)+'\n'
             with open(fname,'r') as file:
                 data = file.readlines()
             f = open(fname,'r+')
@@ -447,11 +448,10 @@ def class_text_to_int(row_label):
     return 0
     
 
-def test_obj():
-    global obj_names
-    for j in obj_names:
-        print(j)
-    print(class_text_to_int('sitting pig'))
+def generate_graph():
+    global num_step
+    cmd = subprocess.Popen('cmd.exe /K cd /d '+file2+'&& py export_inference_graph.py --input_type image_tensor --pipeline_config_path training/faster_rcnn_inception_v2_pets.config --trained_checkpoint_prefix training/model.ckpt-'+str(num_step)+' --output_directory inference_graph && exit')
+    messagebox.showinfo('SUCCESS','Created inference graph!!!!')
 if __name__ == "__main__":
     #MODEL_NAME = 'C:\\Users\\Shan Tong\\Desktop\\NC-TONG HOP\\train 7_latest\\inference_graph'
     MODEL_NAME = ''
@@ -521,9 +521,8 @@ if __name__ == "__main__":
     change_class = Button(tab2, text='Change class',command=change_class)
     change_class.place(x=400,y=359)
 
-    teste = Button(tab2, text='test',command=test_obj)
-    teste.place(x=400,y=270)
-
+    creat_graph = Button(tab2, text='Create graph',command=generate_graph)
+    creat_graph.place(x=400,y=270)
 
     window.mainloop()
 
