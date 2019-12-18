@@ -1,2 +1,2 @@
-# Tensorflow-Object-Detection---Strange-pig-motions
-This is a research about detecting strange pig motions
+# Pig-motions-detection
+This is a research about detecting pig motions
