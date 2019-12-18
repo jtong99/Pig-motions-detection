@@ -55,7 +55,7 @@ def split(df, group):
 
 
 def create_tf_example(group, path):
-    from application1 import class_text_to_int
+    from interface import class_text_to_int
     with tf.gfile.GFile(os.path.join(path, '{}'.format(group.filename)), 'rb') as fid:
         encoded_jpg = fid.read()
     encoded_jpg_io = io.BytesIO(encoded_jpg)
